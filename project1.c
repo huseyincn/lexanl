@@ -7,7 +7,7 @@
 
 bool isStringNotEnded = false; // dosyadan satır satır okuma işlemi yaptığımdan bu iki değişkeni global variable olarak kullanıyorum
 bool isCommentNotEnded = false;
-
+char *strq;
 
 
 //      break,case,char,const,continue,do,else,enum,float,for,goto,if,int,
@@ -82,23 +82,43 @@ void parse(char *line, FILE *filex) {
     int len = strlen(line);
 
     while (right <= len && left <= right) {
-        if (line[left] == '(' && line[left + 1] == '*' || isCommentNotEnded) {
-            isCommentNotEnded == true;
-            while (line[right] != '*' && line[right + 1] != ')') {
+        /*
+        if ((line[left] == '(' && line[left + 1] == '*') || isCommentNotEnded) {
+            isCommentNotEnded = true;
+            if (line[right] != '*' || line[right + 1] != ')') {
                 right++;
             }
-            if(line[right] == '*' && line[right + 1] == ')')
-                isCommentNotEnded==false;
+            if (line[right] == '*' && line[right + 1] == ')') {
+                isCommentNotEnded = false;
+                return; // bu return test AMAÇLIDIR KALDIRILMASI GEREKIYOR
+            }
+        }// bu kısım çalışmakta ayrı bir şekilde geliştirilmiştir
+        */
+        while (((line[left] == '(' && line[left + 1] == '*') || isCommentNotEnded) && right + 1 < len) {
+            isCommentNotEnded = true;
+            if (line[right] != '*' || line[right + 1] != ')') {
+                right++;
+            }
+            if (line[right] == '*' && line[right + 1] == ')') {
+                isCommentNotEnded = false;
+                return;
+            }
         }
 
-        if(line[left]=='"' || isStringNotEnded){
-            if(left==right && isStringNotEnded==false)
+        while ((isStringNotEnded || line[left] == '"') && right <= len) {
+            if (isStringNotEnded == false)
+                printf("String Constant(");
+            if (isStringNotEnded == true && line[right] == '"') {
+                isStringNotEnded = false;
+                printf("%s)\n", line);
+                return;
+            }
+            isStringNotEnded = true;
+            if (left == right || line[right] != '"') {
                 right++;
-            isStringNotEnded==true;
-            while (line[right]!='"')
-                right++;
-            // string ekleme yaz birden buyuk satirli string olursa right leften kucuk olanilir
-            // birden fazla satırlı string atamalarında strcat kullan
+                if (right > len)
+                    printf("%s", line);
+            }
         }
         if (line[right] != ' ')
             right++;
@@ -120,8 +140,15 @@ void parse(char *line, FILE *filex) {
                 if (line[left] == '}')
                     fputs("RightCurlyBracket", filex);
             }
-
             char *kontrol = subString(line, left, right);
+            if(isIdentifier(kontrol))
+                printf("Identifier(%s)",kontrol);
+            else if (isOperator(kontrol))
+                printf("Operator(%s)",kontrol);
+            else if (isInteger(kontrol))
+                printf("IntConst(%s)",kontrol);
+            else if (isKeyword(kontrol))
+                printf("Keyword(%s)",kontrol);
 
 
             left = right;
