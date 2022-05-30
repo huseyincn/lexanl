@@ -1,3 +1,2 @@
-test
-atese
-oks
+hi:=hello+25; (*addition *)
+hello++; (*increment*)
