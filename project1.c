@@ -153,7 +153,7 @@ void parse(FILE *fin, FILE *fout) {
                 fprintf(fout, "%s\n", get_bracket_name(ch));
             } else if (ch == '/' && whatsNext(fin) == '*') {
                 fgetc(fin); // asterisk geçme
-                while (ch = fgetc(fin) != EOF) {
+                while ((ch = fgetc(fin) )!= EOF) {
                     if (ch == '*' && whatsNext(fin) == '/') {
                         fgetc(fin); // slash geçme
                         break;
