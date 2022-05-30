@@ -10,39 +10,15 @@
 //      break,case,char,const,continue,do,else,enum,float,for,goto,if,int,
 //      long,record,return,static,while
 bool isKeyword(char *kelime) {
-    if (strcasecmp(kelime, "break") || strcasecmp(kelime, "case") || strcasecmp(kelime, "char") ||
-        strcasecmp(kelime, "const") || strcasecmp(kelime, "continue") || strcasecmp(kelime, "do") ||
-        strcasecmp(kelime, "else") || strcasecmp(kelime, "enum") || strcasecmp(kelime, "float") ||
-        strcasecmp(kelime, "for") || strcasecmp(kelime, "goto") || strcasecmp(kelime, "if") ||
-        strcasecmp(kelime, "int") || strcasecmp(kelime, "long") || strcasecmp(kelime, "record") ||
-        strcasecmp(kelime, "return") || strcasecmp(kelime, "static") || strcasecmp(kelime, "while")) { return true; }
+    if (strcasecmp(kelime, "break") == 0 || strcasecmp(kelime, "case") == 0 || strcasecmp(kelime, "char") == 0 ||
+        strcasecmp(kelime, "const") == 0 || strcasecmp(kelime, "continue") == 0 || strcasecmp(kelime, "do") == 0 ||
+        strcasecmp(kelime, "else") == 0 || strcasecmp(kelime, "enum") == 0 || strcasecmp(kelime, "float") == 0 ||
+        strcasecmp(kelime, "for") == 0 || strcasecmp(kelime, "goto") == 0 || strcasecmp(kelime, "if") == 0 ||
+        strcasecmp(kelime, "int") == 0 || strcasecmp(kelime, "long") == 0 || strcasecmp(kelime, "record") == 0 ||
+        strcasecmp(kelime, "return") == 0 || strcasecmp(kelime, "static") == 0 ||
+        strcasecmp(kelime, "while") == 0) { return true; }
     return false;
 } // pass to tests
-
-bool isInteger(char *kelime) {
-    int i;
-    int len = strlen(kelime);
-    if (len > MAXINTCONSTSIZE) {
-        printf("The size of integer is bigger than supported.\n");
-        return false;
-    }
-    if (len == 0)
-        return false;
-    for (i = 0; i < len; i++) {
-        if (kelime[i] != '0' && kelime[i] != '1' && kelime[i] != '2' && kelime[i] != '3' && kelime[i] != '4' &&
-            kelime[i] != '5' && kelime[i] != '6' && kelime[i] != '7' && kelime[i] != '8' && kelime[i] != '9' ||
-            kelime[i] == '-')
-            return false;
-    }
-    return true;
-} // this code pass the tests
-
-bool isOperator(char *kelime) {
-    if (!strcasecmp(kelime, "+") || !strcasecmp(kelime, "-") || !strcasecmp(kelime, "*") || !strcasecmp(kelime, "/") ||
-        !strcasecmp(kelime, "++") || !strcasecmp(kelime, "--") || !strcasecmp(kelime, ":="))
-        return true;
-    return false;
-} // this function pass the tests
 
 bool isIdentifier(char *kelime) {
     int i;
@@ -61,18 +37,6 @@ bool isIdentifier(char *kelime) {
     }
     return true;
 } // this fucntion passed all the tests
-
-// Extracts the SUBSTRING.
-char *subString(char *str, int left, int right) {
-    int i;
-    char *subStr = (char *) malloc(
-            sizeof(char) * (right - left + 2));
-
-    for (i = left; i <= right; i++)
-        subStr[i - left] = str[i];
-    subStr[right - left + 1] = '\0';
-    return (subStr);
-}
 
 char *get_bracket_name(char ch) {
     if (ch == '(')
@@ -93,11 +57,15 @@ char *get_bracket_name(char ch) {
 
 char whatsNext(FILE *stream) {
     char c;
-
     c = fgetc(stream);
     ungetc(c, stream);
-
     return c;
+}
+
+bool isDelimiter(char c) {
+    if (c == ';' || c == ')' || c == '}' || c == ']' || c == '+' || c == '-' || c == '*' || c == '/' ||
+        c == ':') { return true; }
+    return false;
 }
 
 void parse(FILE *fin, FILE *fout) {
@@ -107,26 +75,21 @@ void parse(FILE *fin, FILE *fout) {
 
     while ((ch = getc(fin)) != EOF) {
 
-        if (isdigit(ch) && (isspace(whatsNext(fin) || isdigit(whatsNext(fin))))) {
+        if (isdigit(ch) && (isdigit(whatsNext(fin)) || isDelimiter(whatsNext(fin)) || isspace(whatsNext(fin)))) {
             str_temp = (char *) malloc(MAXINTCONSTSIZE + 1);
             i = 0;
             str_temp[i] = ch;
-            while ((ch = fgetc(fin) != EOF && i <= MAXINTCONSTSIZE)) {
+            while (isdigit(whatsNext(fin)) && (ch = fgetc(fin)) != EOF && i <= MAXINTCONSTSIZE) {
                 str_temp[++i] = ch;
-                if (!isdigit(whatsNext(fin))) {
-                    str_temp[++i] = '\0';
-                    break;
-                }
             }
+            str_temp[++i] = '\0';
             if (i > MAXINTCONSTSIZE)
                 printf("The size of integer is bigger than supported.\n");
-            fprintf(fout, "IntConst(%s)", str_temp);
+            fprintf(fout, "IntConst(%s)\n", str_temp);
             free(str_temp);
-
-
         } else if (isalnum(ch) || ch == '_') {
             buffer[index++] = ch;
-            if (!isalnum(whatsNext(fin)) && whatsNext(fin) != '_') { // ((kelime[i] != '_' && !isalpha(kelime[i])) && !isdigit(kelime[i]))
+            if (!isalnum(whatsNext(fin)) && whatsNext(fin) != '_') {
                 buffer[index] = '\0';
                 index = 0;
                 if (isKeyword(buffer))
@@ -143,36 +106,37 @@ void parse(FILE *fin, FILE *fout) {
                     if (whatsNext(fin) == '"') {
                         fgetc(fin); // diğer double quote silindi
                         str_temp[i] = '\0';
+                        fprintf(fout, "StrConst(%s)\n", str_temp);
                         break;
                     }
                 }
                 if (ch == EOF) {
-                    printf("\nThe string constant in the code hasn't been ended by coder.");
+                    fprintf(fout, "The string constant in the code hasn't been ended by coder.\n");
                 }
-            } else if (get_bracket_name(ch) != NULL) {
-                fprintf(fout, "%s\n", get_bracket_name(ch));
-            } else if (ch == '/' && whatsNext(fin) == '*') {
+            } else if (ch == '(' && whatsNext(fin) == '*') {
                 fgetc(fin); // asterisk geçme
-                while ((ch = fgetc(fin) )!= EOF) {
-                    if (ch == '*' && whatsNext(fin) == '/') {
+                while ((ch = fgetc(fin)) != EOF) {
+                    if (ch == '*' && whatsNext(fin) == ')') {
                         fgetc(fin); // slash geçme
                         break;
                     }
                 }
                 if (ch == EOF) {
-                    printf("\nThe comment in the code hasn't been ended by coder.\n");
+                    fprintf(fout, "The comment in the code hasn't been ended by coder.\n");
                 }
+            } else if (get_bracket_name(ch) != NULL) {
+                fprintf(fout, "%s\n", get_bracket_name(ch));
             } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == ':') {
-                if (whatsNext(fin) == '=' && ch == ':'){
+                if (whatsNext(fin) == '=' && ch == ':') {
                     fgetc(fin);
-                    fprintf(fout, "Operator(:=)\n");}
-                else if (whatsNext(fin) == '+' && ch == '+'){
+                    fprintf(fout, "Operator(:=)\n");
+                } else if (whatsNext(fin) == '+' && ch == '+') {
                     fgetc(fin);
-                    fprintf(fout, "Operator(++)\n");}
-                else if (whatsNext(fin) == '-' && ch == '-'){
+                    fprintf(fout, "Operator(++)\n");
+                } else if (whatsNext(fin) == '-' && ch == '-') {
                     fgetc(fin);
-                    fprintf(fout, "Operator(--)\n");}
-                else
+                    fprintf(fout, "Operator(--)\n");
+                } else
                     fprintf(fout, "Operator(%c)\n", ch);
             } else if (ch == ';')
                 fprintf(fout, "EndOfLine\n");
@@ -185,7 +149,6 @@ void parse(FILE *fin, FILE *fout) {
 int main() {
     FILE *fpsi;
     FILE *flex;
-
     fpsi = fopen("code.psi", "r");
     flex = fopen("code.lex", "w+");
 
@@ -196,63 +159,3 @@ int main() {
     parse(fpsi, flex);
     return 0;
 }
-
-/*
-  int left = 0, right = 0;
-    int len = strlen(line);
-
-    while (right <= len && left <= right) {
-        while (((line[left] == '(' && line[left + 1] == '*') || isCommentNotEnded) && right + 1 < len) {
-            isCommentNotEnded = true;
-            if (line[right] != '*' || line[right + 1] != ')') {
-                right++;
-            }
-            if (line[right] == '*' && line[right + 1] == ')') {
-                isCommentNotEnded = false;
-                return;
-            }
-        }
-
-        while ((isStringNotEnded || line[left] == '"') && right <= len) {
-            if (isStringNotEnded == false)
-                printf("String Constant(");
-            if (isStringNotEnded == true && line[right] == '"') {
-                isStringNotEnded = false;
-                printf("%s)\n", line);
-                return;
-            }
-            isStringNotEnded = true;
-            if (left == right || line[right] != '"') {
-                right++;
-                if (right > len)
-                    printf("%s", line);
-            }
-        }
-
-
-
-
-        if (line[right] != ' ')
-            right++;
-        else {
-
-            if (left == right) {
-                if (line[left] == ';')
-                    fputs("EndOfLine\n", filex);
-
-            }
-            char *kontrol = subString(line, left, right);
-            if(isIdentifier(kontrol))
-                printf("Identifier(%s)",kontrol);
-            else if (isOperator(kontrol))
-                printf("Operator(%s)",kontrol);
-            else if (isInteger(kontrol))
-                printf("IntConst(%s)",kontrol);
-            else if (isKeyword(kontrol))
-                printf("Keyword(%s)",kontrol);
-
-
-            left = right;
-        }
-        }
- */
