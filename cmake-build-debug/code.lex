@@ -8,7 +8,7 @@ Operator(++)
 EndOfLine
 Identifier(x)
 Operator(+)
-IntConst(4)
+IntConst(4333)
 EndOfLine
 Identifier(x)
 Operator(--)
