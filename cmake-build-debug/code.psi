@@ -1,17 +1,11 @@
 int x:=5;
 x++;
-x+4333;
+x+4;
 x--;
-x/2;
 x*6;
-x-1;
 whiLe(true) {
 	if(x:=3){
 	y="test";(* tesrrt*)
 	break;
 	}
 }
-long a := 3;
-char b := "c";
-const RE := "asda";
-double Z=34132123123123;
